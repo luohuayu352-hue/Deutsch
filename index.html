@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>德語小精靈：人稱代詞 × 介詞</title>
+<style>
+:root{--bg:#fff8ec;--card:#fff;--ink:#2b2a33;--mut:#7a7787;--a:#ff6b6b;--d:#4d96ff;--ok:#2ec27e;--y:#ffd166;--line:#eadfc8}
+@media(prefers-color-scheme:dark){:root{--bg:#1d1b26;--card:#2a2735;--ink:#f3f0ff;--mut:#a9a4bd;--line:#3d3950}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,"PingFang TC","Noto Sans TC",sans-serif;padding-bottom:80px}
+header{padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header small{color:var(--mut)}
+main{max-width:560px;margin:auto;padding:0 14px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px;margin:12px 0}
+.bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin:6px 0 0}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:.3s}
+h2{margin:.2em 0 .4em;font-size:20px}
+.big{font-size:34px;font-weight:800;text-align:center;margin:8px 0}
+.a{color:var(--a);font-weight:700}.d{color:var(--d);font-weight:700}
+.tag{display:inline-block;padding:1px 10px;border-radius:99px;color:#fff;font-size:13px;font-weight:700}
+.tag.a{background:var(--a);color:#fff}.tag.d{background:var(--d);color:#fff}
+button{font:inherit;border:0;border-radius:14px;padding:12px 16px;background:var(--y);color:#2b2a33;font-weight:700;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+button:active{transform:translateY(2px);box-shadow:none}
+button.sec{background:var(--line);color:var(--ink)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.opts button{background:var(--card);border:2px solid var(--line);color:var(--ink);font-size:20px}
+.opts button.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.opts button.no{background:#ff5d73;color:#fff;border-color:#ff5d73;animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:center}
+th{color:var(--mut);font-weight:600}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:2px solid var(--line)}
+nav button{flex:1;border-radius:0;background:none;box-shadow:none;color:var(--mut);font-size:13px;padding:10px 2px}
+nav button.on{color:var(--ink);background:var(--y)}
+nav button.lock{opacity:.4}
+.fb{min-height:48px;margin-top:10px;font-size:15px}
+.stat{display:flex;justify-content:space-between;color:var(--mut);font-size:14px}
+.tip{background:rgba(255,209,102,.25);border-radius:12px;padding:10px 12px;margin:10px 0;font-size:15px}
+</style>
+</head>
+<body>
+<header><h1>🦊 德語小精靈</h1><small>人稱代詞 × 介詞，零基礎也學得會</small></header>
+<main id="app"></main>
+<nav id="nav"></nav>
+
+<script>
+const P=[
+{n:'ich',a:'mich',d:'mir',zh:'我',py:'伊希'},
+{n:'du',a:'dich',d:'dir',zh:'你',py:'杜'},
+{n:'er',a:'ihn',d:'ihm',zh:'他',py:'誒爾'},
+{n:'sie',a:'sie',d:'ihr',zh:'她',py:'吉'},
+{n:'es',a:'es',d:'ihm',zh:'它',py:'誒斯'},
+{n:'wir',a:'uns',d:'uns',zh:'我們',py:'威爾'},
+{n:'ihr',a:'euch',d:'euch',zh:'你們',py:'伊爾'},
+{n:'sie',a:'sie',d:'ihnen',zh:'他們',py:'吉'},
+{n:'Sie',a:'Sie',d:'Ihnen',zh:'您（敬稱）',py:'吉'}];
+const AP=[['für','為了'],['ohne','沒有'],['gegen','對抗／反對'],['um','圍繞'],['durch','穿過／透過']];
+const DP=[['mit','和／用'],['zu','去（某人那）'],['bei','在（某人）那'],['von','來自／的'],['nach','之後／往'],['aus','從…出來']];
+const POOL=['mich','mir','dich','dir','ihn','ihm','ihr','ihnen','sie','uns','euch','ich','du','er','wir','Ihnen'];
+const W=[ // 方向or位置
+['Die Katze sitzt neben ___ (我)','位置 Wo?','mir',['mich','mir']],
+['Setz dich neben ___ (我)','方向 Wohin?','mich',['mich','mir']],
+['Er steht vor ___ (你)','位置 Wo?','dir',['dich','dir']],
+['Sie läuft vor ___ (他)','方向 Wohin?（跑到他前面）','ihn',['ihn','ihm']],
+['Der Ball liegt hinter ___ (她)','位置 Wo?','ihr',['sie','ihr']],
+['Wirf den Ball zu... nein: in ___ (它,往裡面丟)','方向 Wohin?','es',['es','ihm']]];
+
+const L=[
+{t:'🌍 德語是什麼？',h:`<p>德語和英語是「親戚」，所以很多字長得像：</p>
+<div class="tip">Hand＝手　Haus＝房子（house）　Mutter＝媽媽（mother）　Hund＝狗（hound）</div>
+<p>德語跟中文最大的差別：<b>名字會「變臉」</b>。同一個「我」，在不同位置會變成不同的字。初學階段<b>「我、你、他……」</b></p>
+<p>基本只有 <b>兩種變臉</b>，我們用顏色分：<br><span class="tag a">紅隊 Akkusativ（第四格）</span> 和 <span class="tag d">藍隊 Dativ（第三格）</span></p>`},
+{t:'👤 先認識九個「人」',h:`<p>先學「主角」形式（Nominativ，就是當主詞的時候）：</p>
+<table><tr><th>德語</th><th>中文</th><th>怎麼唸</th></tr>
+${P.map(p=>`<tr><td><b>${p.n}</b></td><td>${p.zh}</td><td>${p.py}</td></tr>`).join('')}</table>
+<div class="tip">⚠️ <b>sie</b> 有三種意思：她／他們，還有大寫開頭的 <b>Sie</b>＝您（對陌生人、長輩的禮貌說法）。</div>
+<p>例：<b>Ich</b> bin Anna.（我是 Anna。）</p>`},
+{t:'🎭 為什麼要變臉？',h:`<p>中文：「他愛我」「我愛他」，「我」跟「他」長一樣。</p>
+<p>德語：「我」當主詞是 <b>ich</b>，但被愛的時候是 <b class="a">mich</b>，「給我」是 <b class="d">mir</b>。</p>
+<div class="big">ich → <span class="a">mich</span> / <span class="d">mir</span></div>
+<p>誰決定要變哪一個？答案：<b>前面的介詞（in front of 的小字）</b>。</p>
+<div class="tip">介詞＝for（為了）、with（和）、without（沒有）這類小字。<br>德語的介詞就像「門衛」：<b>你站在我後面，就得穿我指定的制服。</b></div>`},
+{t:'🔴 紅隊：Akkusativ 介詞',h:`<p>這五個（加 bis, entlang）後面，一律穿<b class="a">紅色制服</b>：</p>
+<table>${AP.map(p=>`<tr><td><b class="a">${p[0]}</b></td><td>${p[1]}</td><td>${p[0]} <b class="a">mich</b></td></tr>`).join('')}</table>
+<p>人稱的紅色制服：</p>
+<div class="big a" style="font-size:24px">mich · dich · ihn · sie · es<br>uns · euch · sie · Sie</div>
+<div class="tip">🧠 口訣 <b>FUDGEBO</b>：<b>F</b>ür <b>U</b>m <b>D</b>urch <b>G</b>egen <b>E</b>ntlang <b>B</b>is <b>O</b>hne</div>
+<p>例：Das ist <b>für dich</b>.（這是給你的。）　Ich gehe <b>ohne ihn</b>.（我沒有他就走。）</p>`},
+{t:'🔵 藍隊：Dativ 介詞',h:`<p>這幾個後面，一律穿<b class="d">藍色制服</b>：</p>
+<table>${DP.map(p=>`<tr><td><b class="d">${p[0]}</b></td><td>${p[1]}</td><td>${p[0]} <b class="d">mir</b></td></tr>`).join('')}</table>
+<p>人稱的藍色制服：</p>
+<div class="big d" style="font-size:24px">mir · dir · ihm · ihr · ihm<br>uns · euch · ihnen · Ihnen</div>
+<div class="tip">🧠 口訣唸成歌：<b>aus-bei-mit-nach, seit-von-zu</b>（還有 gegenüber）<br>⚠️ <b>seit</b>：說「從我童年起」用 seit meiner Kindheit。</div>
+<p>例：Ich gehe <b>mit dir</b>.（我和你去。）　Das Buch ist <b>von ihr</b>.（書是她的。）</p>`},
+{t:'🎢 雙面介詞（進階一點點）',h:`<p>an, auf, in, über, unter, vor, hinter, neben, zwischen 會看<b>動作</b>決定隊伍：</p>
+<table><tr><th>問題</th><th>隊伍</th><th>例</th></tr>
+<tr><td>Wohin?<br>要去哪（有移動）</td><td class="a">紅 Akk</td><td>neben <b class="a">mich</b></td></tr>
+<tr><td>Wo?<br>在哪（沒移動）</td><td class="d">藍 Dativ</td><td>neben <b class="d">mir</b></td></tr></table>
+<div class="tip">🧠 想像：「<b>去</b>」（往前走）→ 紅色＝停止警示；「<b>待著</b>」→ 藍色＝安靜的天空。</div>
+<p>好了！基礎教學結束 🎉 按下面「解鎖遊戲」開始練習！</p>`}];
+
+let tab='learn',li=0,unlocked=false,score=0,streak=0,cur=null,locked=false;
+const $=id=>document.getElementById(id);
+const sh=a=>a.map(x=>[Math.random(),x]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+function nav(){
+ const T=[['learn','📖','學習',0],['sort','🔴🔵','分隊',1],['fill','✍️','填空',1],['wo','🎢','方向',1],['cheat','📋','速查',0]];
+ $('nav').innerHTML=T.map(t=>`<button class="${tab===t[0]?'on':''} ${t[3]&&!unlocked?'lock':''}" onclick="go('${t[0]}')">${t[1]}<br>${t[3]&&!unlocked?'🔒':t[2]}</button>`).join('');
+}
+function go(t){
+ if(['sort','fill','wo'].includes(t)&&!unlocked){alert('先把 6 堂小課看完就解鎖囉！');return}
+ tab=t;nav();render();window.scrollTo(0,0);
+}
+function render(){
+ if(tab==='learn')return learn();
+ if(tab==='cheat')return cheat();
+ $('app').innerHTML=`<div class="card"><div class="stat"><span>⭐ 分數 <b id="sc">${score}</b></span><span>🔥 連對 <b id="st">${streak}</b></span></div></div><div class="card" id="q"></div>`;
+ ({sort:qSort,fill:qFill,wo:qWo})[tab]();
+}
+function learn(){
+ const x=L[li],last=li===L.length-1;
+ $('app').innerHTML=`<div class="card"><div class="stat"><span>第 ${li+1} / ${L.length} 堂</span></div><div class="bar"><i style="width:${(li+1)/L.length*100}%"></i></div></div>
+ <div class="card"><h2>${x.t}</h2>${x.h}</div>
+ <div class="row">${li?'<button class="sec" onclick="li--;learn()">← 上一堂</button>':''}
+ ${last?'<button onclick="unlock()">🎮 解鎖遊戲！</button>':'<button onclick="li++;learn();scrollTo(0,0)">下一堂 →</button>'}</div>`;
+}
+function unlock(){unlocked=true;nav();go('sort')}
+function cheat(){
+ $('app').innerHTML=`<div class="card"><h2>📋 人稱速查表</h2><table><tr><th>人</th><th>主格</th><th class="a">🔴Akk</th><th class="d">🔵Dat</th></tr>
+ ${P.map(p=>`<tr><td>${p.zh}</td><td>${p.n}</td><td class="a">${p.a}</td><td class="d">${p.d}</td></tr>`).join('')}</table></div>
+ <div class="card"><h2>🧠 口訣</h2><p><span class="tag a">紅</span> für, ohne, gegen, um, durch, bis, entlang<br><span class="tag d">藍</span> aus, bei, mit, nach, seit, von, zu, gegenüber<br>🎢 an, auf, in, über, unter, vor, hinter, neben, zwischen：<b>Wohin→紅，Wo→藍</b></p></div>
+ <div class="card"><h2>⚠️ 常見錯誤</h2><table><tr><th>❌</th><th>✅</th></tr>
+ <tr><td>mit ich</td><td>mit mir</td></tr><tr><td>für ich</td><td>für mich</td></tr><tr><td>zu er</td><td>zu ihm</td></tr><tr><td>ohne du</td><td>ohne dich</td></tr><tr><td>bei sie（他們）</td><td>bei ihnen</td></tr><tr><td>對您 zu Sie</td><td>zu Ihnen</td></tr></table></div>`;
+}
+function fin(ok,msg,btns){
+ if(locked)return;locked=true;
+ if(ok){score+=10+Math.min(streak,5)*2;streak++}else streak=0;
+ $('sc').textContent=score;$('st').textContent=streak;
+ $('fb').innerHTML=(ok?'🎉 答對了！':'😵 差一點！')+' '+msg+'<br><br><button onclick="render()">下一題 →</button>';
+}
+function opts(list,correct,cls){
+ return `<div class="opts">${list.map(o=>`<button onclick="chk(this,'${o}','${correct}')">${o}</button>`).join('')}</div><div class="fb" id="fb"></div>`;
+}
+function chk(b,o,c){
+ if(locked)return;
+ const ok=o===c;b.classList.add(ok?'ok':'no');
+ if(!ok)[...b.parentNode.children].forEach(x=>{if(x.textContent===c)x.classList.add('ok')});
+ fin(ok,cur.msg);
+}
+function qSort(){
+ locked=false;
+ const isA=Math.random()<.5,p=isA?pick(AP):pick(DP);
+ cur={msg:`<b>${p[0]}</b> 屬於${isA?'<b class="a">紅隊 Akk</b>':'<b class="d">藍隊 Dativ</b>'}。`};
+ $('q').innerHTML=`<h2>它是哪一隊？</h2><div class="big">${p[0]}</div><p style="text-align:center;color:var(--mut)">意思：${p[1]}</p>
+ <div class="opts"><button class="" style="background:var(--a);color:#fff" onclick="chk2(this,true,${isA})">🔴 Akkusativ</button><button style="background:var(--d);color:#fff" onclick="chk2(this,false,${isA})">🔵 Dativ</button></div><div class="fb" id="fb"></div>`;
+}
+function chk2(b,sayA,isA){if(locked)return;fin(sayA===isA,cur.msg)}
+function qFill(){
+ locked=false;
+ const isA=Math.random()<.5,pr=isA?pick(AP):pick(DP),p=pick(P),c=isA?p.a:p.d;
+ let o=[c];
+ [p.n,p.a,p.d,...sh(POOL)].forEach(x=>{if(o.length<4&&!o.includes(x))o.push(x)});
+ cur={msg:`<b>${pr[0]}</b> 是${isA?'<b class="a">紅隊</b>':'<b class="d">藍隊</b>'}，「${p.zh}」要變成 <b>${c}</b>。`};
+ $('q').innerHTML=`<h2>選出正確形式</h2><div class="big">${pr[0]} ___</div><p style="text-align:center;color:var(--mut)">（${pr[1]}　${p.zh}）</p>${opts(sh(o),c)}`;
+}
+function qWo(){
+ locked=false;
+ const w=pick(W);
+ cur={msg:`${w[1]}，所以答案是 <b>${w[2]}</b>。`};
+ $('q').innerHTML=`<h2>Wo? 還是 Wohin?</h2><div class="big" style="font-size:20px">${w[0]}</div>${opts(sh(w[3]),w[2])}`;
+}
+nav();render();
+</script>
+</body>
+</html>
